@@ -3,10 +3,10 @@ import torch.distributed as dist
 import torch.multiprocessing as mp
 import valohai
 
-
+device = torch.device('cuda')
 def run(my_rank, world_size):
     group = dist.new_group(list(range(world_size)))
-    tensor = torch.ones(1)
+    tensor = torch.ones(1).to(device)
     dist.all_reduce(tensor, op=dist.ReduceOp.SUM, group=group)
     print(f'Rank {my_rank} has data {tensor} on host {valohai.distributed.me().identity}')
 
