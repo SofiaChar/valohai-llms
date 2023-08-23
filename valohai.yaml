@@ -1,0 +1,33 @@
+- step:
+    name: connect
+    image: python:3.9
+    command:
+      - pip install --upgrade pip
+      - pip install torch
+      - pip install sentence_transformers
+      - pip install chromadb
+      - pip install langchain
+      - pip install transformers
+      - python langchain/set_up.py
+- step:
+    name: train
+    image: sofiiavalohai/valohai-llms:v1.5
+    environment: staging-aws-eu-west-1-p3-8xlarge
+    command:
+      - python dist-mnist.py
+- step:
+    name: gpt2-convai
+    image: python:3.9
+    command:
+      - pip install --upgrade pip
+      - pip install torch
+      - pip install sentence_transformers
+      - pip install chromadb
+      - pip install langchain
+      - pip install transformers
+      - pip install matplotlib
+      - pip install datasets
+      - pip install nltk
+      - pip install py7zr
+      - pip install accelerate -U
+      - python finetuned-gpt2-convai.py
