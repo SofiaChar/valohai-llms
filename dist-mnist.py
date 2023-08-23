@@ -118,6 +118,7 @@ def run(my_rank, world_size):
     )
     num_batches = math.ceil(len(train_set.dataset) / float(bsz))
     for epoch in range(2):
+        print('started epoch ', epoch)
         epoch_loss = 0.0
         for data, target in train_set:
             optimizer.zero_grad()
