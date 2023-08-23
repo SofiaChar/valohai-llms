@@ -151,6 +151,9 @@ if __name__ == '__main__':
     size = valohai.distributed.required_count
     rank = valohai.distributed.me().rank
 
+    print('rank ', rank)
+    print('size ', size)
+
     mp.set_start_method('spawn')
     p = mp.Process(target=init, args=(url, rank, size, run))
     p.start()
