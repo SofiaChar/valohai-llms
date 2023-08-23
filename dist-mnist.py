@@ -139,6 +139,7 @@ def run(my_rank, world_size):
 
 def init(master_url, my_rank, world_size, fn):
     dist.init_process_group(init_method=master_url, rank=my_rank, world_size=world_size, backend='gloo')
+    print('init process group')
     fn(my_rank, world_size)
 
 
@@ -153,4 +154,7 @@ if __name__ == '__main__':
     mp.set_start_method('spawn')
     p = mp.Process(target=init, args=(url, rank, size, run))
     p.start()
+    print('p start')
     p.join()
+    print('p join')
+
