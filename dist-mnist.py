@@ -15,6 +15,8 @@ from torchvision import datasets, transforms
 
 device = torch.device("cuda")
 print('device ', device)
+
+
 class Net(nn.Module):
 
     def __init__(self):
@@ -108,8 +110,10 @@ def average_gradients(model):
 
 
 def run(my_rank, world_size):
+    print('in run')
     torch.manual_seed(1234)
     train_set, bsz = partition_dataset()
+    train_set.to(device)
     model = Net().to(device)
     optimizer = optim.SGD(
         model.parameters(),
@@ -139,7 +143,6 @@ def init(master_url, my_rank, world_size, fn):
 
 
 if __name__ == '__main__':
-
     master_port = 1234
     master_ip = valohai.distributed.master().primary_local_ip
     url = f"tcp://{master_ip}:{master_port}"
