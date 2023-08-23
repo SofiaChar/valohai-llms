@@ -144,7 +144,7 @@ def init(master_url, my_rank, world_size, fn):
 
 
 if __name__ == '__main__':
-    master_port = 1234
+    master_port = 1235
     master_ip = valohai.distributed.master().primary_local_ip
     url = f"tcp://{master_ip}:{master_port}"
     print('url', url)
