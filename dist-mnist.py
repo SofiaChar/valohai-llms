@@ -147,7 +147,7 @@ if __name__ == '__main__':
     master_port = 1234
     master_ip = valohai.distributed.master().primary_local_ip
     url = f"tcp://{master_ip}:{master_port}"
-
+    print('url', url)
     size = valohai.distributed.required_count
     rank = valohai.distributed.me().rank
 
