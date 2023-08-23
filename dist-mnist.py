@@ -13,7 +13,7 @@ from torch import optim
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 
-
+device = torch.device("cuda")
 class Net(nn.Module):
 
     def __init__(self):
@@ -109,7 +109,7 @@ def average_gradients(model):
 def run(my_rank, world_size):
     torch.manual_seed(1234)
     train_set, bsz = partition_dataset()
-    model = Net()
+    model = Net().to(device)
     optimizer = optim.SGD(
         model.parameters(),
         lr=0.01,
@@ -120,7 +120,7 @@ def run(my_rank, world_size):
         epoch_loss = 0.0
         for data, target in train_set:
             optimizer.zero_grad()
-            output = model(data)
+            output = model(data.to(device))
             loss = F.nll_loss(output, target)
             epoch_loss += loss.item()
             loss.backward()
