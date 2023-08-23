@@ -15,6 +15,9 @@
     environment: staging-aws-eu-west-1-p3-8xlarge
     command:
       - python dist-mnist.py
+    environment-variables:
+      - name: VH_DOCKER_NETWORK
+        default: host
 - step:
     name: gpt2-convai
     image: python:3.9
