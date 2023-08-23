@@ -14,6 +14,7 @@ from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 
 device = torch.device("cuda")
+print('device ', device)
 class Net(nn.Module):
 
     def __init__(self):
