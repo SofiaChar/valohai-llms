@@ -1,30 +1,34 @@
 import sys
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
-from transformers import pipeline, set_seed
-import matplotlib.pyplot as plt
 from datasets import load_dataset, load_metric
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
-import nltk
-from nltk.tokenize import sent_tokenize
 from tqdm import tqdm
 import torch
-
-nltk.download("punkt")
 from transformers import DataCollatorForSeq2Seq, TrainingArguments, Trainer
-import torch
-import torch.distributed as dist
-import torch.multiprocessing as mp
-import valohai
 import os
 from transformers import get_scheduler
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
+import nltk
+
+nltk.download("punkt")
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 os.environ['TRANSFORMERS_NO_ADVISORY_WARNINGS'] = 'true'
 
 
-class PegasusSamsumTrainer:
+class ModelTrainer:
     def __init__(self, model_ckpt, batch_size=2, num_epochs=1, warmup_steps=500, evaluation_steps=500):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.model_ckpt = model_ckpt
+        self.batch_size = batch_size
+        self.num_epochs = num_epochs
+        self.warmup_steps = warmup_steps
+        self.evaluation_steps = evaluation_steps
+
+        self.print_gpu_report()
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_ckpt)
+        self.model_pegasus = AutoModelForSeq2SeqLM.from_pretrained(self.model_ckpt).to(self.device)
+
+    def print_gpu_report(self):
         print('torch.cuda.device_count() ', torch.cuda.device_count())
         print('self.device ', self.device)
 
@@ -41,14 +45,6 @@ class PegasusSamsumTrainer:
 
         print('Available devices ', torch.cuda.device_count())
         print('Current cuda device ', torch.cuda.current_device())
-        self.model_ckpt = model_ckpt
-        self.batch_size = batch_size
-        self.num_epochs = num_epochs
-        self.warmup_steps = warmup_steps
-        self.evaluation_steps = evaluation_steps
-
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model_ckpt)
-        self.model_pegasus = AutoModelForSeq2SeqLM.from_pretrained(self.model_ckpt).to(self.device)
 
     def generate_batch_sized_chunks(self, list_of_elements):
         """split the dataset into smaller batches that we can process simultaneously
@@ -120,14 +116,14 @@ class PegasusSamsumTrainer:
 
         seq2seq_data_collator = DataCollatorForSeq2Seq(self.tokenizer, model=self.model_pegasus)
 
-        train_data = DataLoader(dataset_samsum_pt, collate_fn=seq2seq_data_collator, shuffle=True, batch_size=self.batch_size)
+        train_data = DataLoader(dataset_samsum_pt, collate_fn=seq2seq_data_collator, shuffle=True,
+                                batch_size=self.batch_size)
 
         device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-        for epoch in tqdm(range(self.num_epochs)):
+        for _ in tqdm(range(self.num_epochs)):
             self.model_pegasus.train()
             for batch in train_data:
-                # batch = print('k ', k ) for k, v in batch.items()
                 outputs = self.model_pegasus(**batch)
                 loss = outputs.loss
                 loss.backward()
@@ -139,7 +135,7 @@ class PegasusSamsumTrainer:
 
 def run():
     model_ckpt = "facebook/bart-large-cnn"
-    trainer = PegasusSamsumTrainer(model_ckpt=model_ckpt)
+    trainer = ModelTrainer(model_ckpt=model_ckpt)
     dataset_samsum = load_dataset('samsum')
 
     print(f"Train dataset size: {len(dataset_samsum['train'])}")
@@ -149,25 +145,8 @@ def run():
     eval_dataset = dataset_samsum["validation"]
 
     output_dir = "bart-samsum-model"
-    # trainer.train(output_dir=output_dir, train_dataset=train_dataset, eval_dataset=eval_dataset)
-    trainer.training_loop(output_dir=output_dir, train_dataset=train_dataset, eval_dataset=eval_dataset)
-
-
-# def init(master_url, my_rank, world_size, fn):
-#     dist.init_process_group(init_method=master_url, rank=my_rank, world_size=world_size, backend='gloo')
-#     fn(my_rank, world_size)
+    trainer.train(output_dir=output_dir, train_dataset=train_dataset, eval_dataset=eval_dataset)
 
 
 if __name__ == '__main__':
-    # master_port = 1234
-    # master_ip = valohai.distributed.master().primary_local_ip
-    # url = f"tcp://{master_ip}:{master_port}"
-    #
-    # size = valohai.distributed.required_count
-    # rank = valohai.distributed.me().rank
-    #
-    # mp.set_start_method('spawn')
-    # p = mp.Process(target=init, args=(url, rank, size, run))
-    # p.start()
-    # p.join()
     run()

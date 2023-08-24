@@ -43,16 +43,6 @@ summarization_name_mapping = {
     "wiki_summary": ("article", "highlights"),
 }
 
-
-# if args.config_name:
-#     config = AutoConfig.from_pretrained(args.model_name_or_path)
-# elif args.model_name_or_path:
-#     config = AutoConfig.from_pretrained(args.model_name_or_path)
-# else:
-#     config = CONFIG_MAPPING[args.model_type]()
-#     logger.warning("You are instantiating a new config instance from scratch.")
-
-
 def train():
     logger = logging.getLogger(__name__)
 

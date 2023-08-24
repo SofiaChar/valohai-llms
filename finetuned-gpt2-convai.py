@@ -81,7 +81,7 @@ model = model.to(device)
 # print(tokenizer.decode(model.generate(**tokenizer("hey i was good at basketball but ",
 #                          return_tensors="pt"))[0]))
 
-chatData = ChatData("./chat_data.json", tokenizer)
+chatData = ChatData("stuff/chat_data.json", tokenizer)
 chatData =  DataLoader(chatData, batch_size=64)
 
 model.train()

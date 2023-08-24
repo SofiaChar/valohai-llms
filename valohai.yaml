@@ -1,4 +1,30 @@
 - step:
+    name: train-distributed-launch
+    image: sofiiavalohai/valohai-llms:v1.5
+    environment: staging-aws-eu-west-1-p3-8xlarge
+    command:
+      - python -m torch.distributed.launch --nproc-per-node=4 train-accelerator.py
+
+- step:
+    name: train-accelerator
+    image: sofiiavalohai/valohai-llms:v1.5
+    environment: staging-aws-eu-west-1-p3-8xlarge
+    command:
+      - python train-accelerator.py
+
+- step:
+    name: train-task
+    image: pytorch/pytorch:1.11.0-cuda11.3-cudnn8-runtime
+    environment: staging-aws-eu-west-1-p3-8xlarge
+    command:
+      - pip install -r requirements.txt --disable-pip-version-check -q
+      - python train-task.py
+    environment-variables:
+      - name: VH_DOCKER_NETWORK
+        default: host
+
+
+- step:
     name: connect
     image: python:3.9
     command:
@@ -8,9 +34,9 @@
       - pip install chromadb
       - pip install langchain
       - pip install transformers
-      - python langchain/set_up.py
+      - python stuff/set_up.py
 - step:
-    name: train
+    name: test-dist-mnist
     image:  pytorch/pytorch:1.11.0-cuda11.3-cudnn8-runtime
     environment: staging-aws-eu-west-1-p3-8xlarge
     command:
