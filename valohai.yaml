@@ -10,7 +10,7 @@
     image: sofiiavalohai/valohai-llms:v1.5
     environment: staging-aws-eu-west-1-p3-8xlarge
     command:
-      - pip install accelerate
+      - pip install accelerate evaluate absl-py rouge-score
       - python train-accelerator.py
 
 - step:

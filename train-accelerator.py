@@ -8,7 +8,7 @@ import datasets
 import nltk
 import numpy as np
 import torch
-
+import evaluate
 from datasets import load_dataset, load_metric
 from torch.utils.data.dataloader import DataLoader
 from tqdm.auto import tqdm
@@ -167,7 +167,7 @@ def train():
         num_warmup_steps=1
     )
 
-    metric = load_metric("rouge")
+    metric = evaluate.load("rouge")
 
     # Train!
     logger.info("***** Running training *****")
