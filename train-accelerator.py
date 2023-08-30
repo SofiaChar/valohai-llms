@@ -60,7 +60,7 @@ def train():
         datasets.utils.logging.set_verbosity_error()
         transformers.utils.logging.set_verbosity_error()
 
-    num_train_epochs = 5
+    num_train_epochs = 1
 
     raw_datasets = load_dataset('samsum')
     model_ckpt = "facebook/bart-large-cnn"
@@ -194,7 +194,6 @@ def train():
                 break
 
         model.eval()
-        val_max_target_length = max_target_length
 
         gen_kwargs = {
             "max_length": 128,
@@ -225,6 +224,7 @@ def train():
 
                 metric.add_batch(predictions=decoded_preds, references=decoded_labels)
         result = metric.compute(use_stemmer=True)
+
         # Extract a few results from ROUGE
         result = {key: value.mid.fmeasure * 100 for key, value in result.items()}
 
