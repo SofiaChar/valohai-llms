@@ -10,6 +10,7 @@
     image: sofiiavalohai/valohai-llms:v1.5
     environment: staging-aws-eu-west-1-p3-8xlarge
     command:
+      - pip install transformers==4.6.0
       - pip install accelerate evaluate absl-py rouge-score
       - python -m accelerate.commands.launch --num_processes=4 train-accelerator.py
 

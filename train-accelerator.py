@@ -13,7 +13,10 @@ from datasets import load_dataset, load_metric
 from torch.utils.data.dataloader import DataLoader
 from tqdm.auto import tqdm
 from accelerate import Accelerator
-
+from langchain.chains import VectorDBQA
+from langchain.llms import HuggingFacePipeline
+from transformers import AutoTokenizer, pipeline, AutoModelForSeq2SeqLM
+from langchain import PromptTemplate, LLMChain
 import transformers
 
 from filelock import FileLock
@@ -236,6 +239,30 @@ def train():
         accelerator.wait_for_everyone()
         unwrapped_model = accelerator.unwrap_model(model)
         unwrapped_model.save_pretrained(output_dir, save_function=accelerator.save)
+
+
+    # Use Vector database
+
+    pipe = pipeline(
+        "text2text-generation",
+        model=model,
+        tokenizer=tokenizer,
+        max_length=100
+    )
+    local_llm = HuggingFacePipeline(pipeline=pipe)
+
+    template = """Question: {question}
+    Answer: Let's think step by step.
+    Answer: """
+
+    qa = VectorDBQA.from_chain_type(llm=local_llm, chain_type="stuff", vectorstore=vectordb)
+
+    question = "What is amazon sagemaker?"
+
+    qa_output = qa.run(question)
+
+    # LLM with the vector DB
+    print("Vector DB Output: ", qa_output)
 
 
 if __name__ == '__main__':
