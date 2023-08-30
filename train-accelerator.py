@@ -229,7 +229,7 @@ def train():
         result = metric.compute(use_stemmer=True)
 
         # Extract a few results from ROUGE
-        result = {key: value.mid.fmeasure * 100 for key, value in result.items()}
+        result = {key: value * 100 for key, value in result.items()}
 
         result = {k: round(v, 4) for k, v in result.items()}
 
