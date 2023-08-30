@@ -223,7 +223,7 @@ def train():
                 decoded_preds = tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
                 decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
 
-                decoded_preds, decoded_labels = postprocess_text(decoded_preds, decoded_labels)
+                # decoded_preds, decoded_labels = postprocess_text(decoded_preds, decoded_labels)
 
                 metric.add_batch(predictions=decoded_preds, references=decoded_labels)
         result = metric.compute(use_stemmer=True)
