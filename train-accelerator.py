@@ -242,9 +242,9 @@ def train():
 
 
     # Use Vector database
-
-    pipe = pipeline(
-        "text2text-generation",
+    model = unwrapped_model
+    pipe = transformers.pipeline(
+        "summarization",
         model=model,
         tokenizer=tokenizer,
         max_length=100
