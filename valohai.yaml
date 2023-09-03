@@ -1,5 +1,5 @@
 - step:
-    name: train-distributed-launch
+    name: train-torchrun
     image: sofiiavalohai/valohai-llms:v1.5
     environment: staging-aws-eu-west-1-p3-8xlarge
     command:
