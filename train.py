@@ -81,7 +81,7 @@ class ModelTrainer:
             target_encodings = self.tokenizer(example_batch['summary'], padding="max_length", truncation=True)
         # print("input_encodings['input_ids']", input_encodings['input_ids'])
         return {
-            'input_ids': input_encodings['input_ids'][0],
+            'input_ids': input_encodings['input_ids'],
             'attention_mask': input_encodings['attention_mask'],
             'labels': target_encodings['input_ids']
         }
@@ -105,32 +105,6 @@ class ModelTrainer:
         trainer.train()
 
         self.model_pegasus.save_pretrained(output_dir)
-
-    def training_loop(self, output_dir, train_dataset, eval_dataset):
-        optimizer = AdamW(self.model_pegasus.model.parameters(), lr=5e-5)
-        lr_scheduler = get_scheduler(
-            name="linear", optimizer=optimizer, num_warmup_steps=self.warmup_steps, num_training_steps=16
-        )
-
-        dataset_samsum_pt = train_dataset.map(self.convert_examples_to_features, batched=True)
-
-        seq2seq_data_collator = DataCollatorForSeq2Seq(self.tokenizer, model=self.model_pegasus)
-
-        train_data = DataLoader(dataset_samsum_pt, collate_fn=seq2seq_data_collator, shuffle=True,
-                                batch_size=self.batch_size)
-
-        device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-
-        for _ in tqdm(range(self.num_epochs)):
-            self.model_pegasus.train()
-            for batch in train_data:
-                outputs = self.model_pegasus(**batch)
-                loss = outputs.loss
-                loss.backward()
-
-                optimizer.step()
-                lr_scheduler.step()
-                optimizer.zero_grad()
 
 
 def run():
