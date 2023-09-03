@@ -235,8 +235,6 @@ def train():
         unwrapped_model = accelerator.unwrap_model(model)
         unwrapped_model.save_pretrained(output_dir, save_function=accelerator.save)
 
-    torch.cuda.empty_cache()
-
     # Model inference with transformers.pipeline
     summarizer = transformers.pipeline(
         "summarization",
@@ -255,6 +253,8 @@ def train():
 
     print(f"Our bart-samsum-model summary:\n{res[0]['summary_text']}")
 
+    accelerator.free_memory()
+    torch.cuda.empty_cache()
     # Use Vector database - Chroma
 
     persist_directory = 'db'
