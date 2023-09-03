@@ -241,7 +241,7 @@ def train():
         model=unwrapped_model,
         tokenizer=tokenizer,
         max_length=100,
-        devide=0
+        device=0
     )
 
     sample = raw_datasets['test'][randrange(len(raw_datasets["test"]))]
