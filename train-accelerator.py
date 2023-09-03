@@ -4,6 +4,11 @@ import math
 import os
 import random
 import torch.distributed as dist
+from random import randrange
+from langchain.embeddings.sentence_transformer import SentenceTransformerEmbeddings
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.vectorstores import Chroma
+from langchain.document_loaders import TextLoader
 import datasets
 import nltk
 import numpy as np
@@ -18,7 +23,7 @@ from langchain.llms import HuggingFacePipeline
 from transformers import AutoTokenizer, pipeline, AutoModelForSeq2SeqLM
 from langchain import PromptTemplate, LLMChain
 import transformers
-
+from langchain.chains.summarize import load_summarize_chain
 from filelock import FileLock
 from transformers import (
     CONFIG_MAPPING,
@@ -46,6 +51,7 @@ summarization_name_mapping = {
     "xsum": ("document", "summary"),
     "wiki_summary": ("article", "highlights"),
 }
+
 
 def train():
     logger = logging.getLogger(__name__)
@@ -240,29 +246,38 @@ def train():
         unwrapped_model = accelerator.unwrap_model(model)
         unwrapped_model.save_pretrained(output_dir, save_function=accelerator.save)
 
-
-    # Use Vector database
-    model = unwrapped_model
-    pipe = transformers.pipeline(
+    # Model inference with transformers.pipeline
+    summarizer = transformers.pipeline(
         "summarization",
-        model=model,
+        model=unwrapped_model,
         tokenizer=tokenizer,
         max_length=100
     )
-    local_llm = HuggingFacePipeline(pipeline=pipe)
 
-    template = """Question: {question}
-    Answer: Let's think step by step.
-    Answer: """
+    sample = raw_datasets['test'][randrange(len(raw_datasets["test"]))]
+    print(f"dialogue: \n{sample['dialogue']}\n---------------")
 
-    qa = VectorDBQA.from_chain_type(llm=local_llm, chain_type="stuff", vectorstore=vectordb)
+    # summarize dialogue
+    res = summarizer(sample["dialogue"])
 
-    question = "What is amazon sagemaker?"
+    print(f"Our bart-samsum-model summary:\n{res[0]['summary_text']}")
 
-    qa_output = qa.run(question)
+    # Use Vector database - Chroma
 
-    # LLM with the vector DB
-    print("Vector DB Output: ", qa_output)
+    persist_directory = 'db'
+    texts = raw_datasets['test']
+
+    embeddings = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
+
+    # Create the database and save it on the disk
+    vectordb = Chroma.from_documents(documents=texts,
+                                     embedding=embeddings,
+                                     persist_directory=persist_directory)
+    # query it
+    query = "What is the meeting point"
+    docs = vectordb.similarity_search(query)
+    # print results
+    print(docs[0].page_content)
 
 
 if __name__ == '__main__':
