@@ -235,6 +235,8 @@ def train():
         unwrapped_model = accelerator.unwrap_model(model)
         unwrapped_model.save_pretrained(output_dir, save_function=accelerator.save)
 
+    torch.cuda.empty_cache()
+
     # Model inference with transformers.pipeline
     summarizer = transformers.pipeline(
         "summarization",
