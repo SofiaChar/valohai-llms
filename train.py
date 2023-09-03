@@ -16,7 +16,7 @@ os.environ['TRANSFORMERS_NO_ADVISORY_WARNINGS'] = 'true'
 
 
 class ModelTrainer:
-    def __init__(self, model_ckpt, batch_size=2, num_epochs=1, warmup_steps=500, evaluation_steps=500):
+    def __init__(self, model_ckpt, batch_size=1, num_epochs=1, warmup_steps=500, evaluation_steps=500):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model_ckpt = model_ckpt
         self.batch_size = batch_size
@@ -95,12 +95,12 @@ class ModelTrainer:
             output_dir=output_dir, num_train_epochs=self.num_epochs, warmup_steps=self.warmup_steps,
             per_device_train_batch_size=self.batch_size, per_device_eval_batch_size=self.batch_size,
             weight_decay=0.01, logging_steps=10, evaluation_strategy='steps', eval_steps=self.evaluation_steps,
-            save_steps=1e6, gradient_accumulation_steps=16
+            save_steps=1e6, gradient_accumulation_steps=16, ddp_find_unused_parameters=False
         )
 
         trainer = Trainer(model=self.model_pegasus, args=trainer_args, tokenizer=self.tokenizer,
                           data_collator=seq2seq_data_collator, train_dataset=dataset_samsum_pt,
-                          eval_dataset=eval_dataset)
+                          eval_dataset=eval_dataset, find_unused_parameters=True)
 
         trainer.train()
 
