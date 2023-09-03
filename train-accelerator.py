@@ -255,20 +255,20 @@ def train():
 
     # Use Vector database - Chroma
 
-    persist_directory = 'db'
-    texts = raw_datasets['test']
-
-    embeddings = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
-
-    # Create the database and save it on the disk
-    vectordb = Chroma.from_documents(documents=texts,
-                                     embedding=embeddings,
-                                     persist_directory=persist_directory)
-    # query it
-    query = "What is the meeting point"
-    docs = vectordb.similarity_search(query)
-    # print results
-    print(docs[0].page_content)
+    # persist_directory = 'db'
+    # texts = raw_datasets['test']
+    #
+    # embeddings = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
+    #
+    # # Create the database and save it on the disk
+    # vectordb = Chroma.from_documents(documents=texts,
+    #                                  embedding=embeddings,
+    #                                  persist_directory=persist_directory)
+    # # query it
+    # query = "What is the meeting point"
+    # docs = vectordb.similarity_search(query)
+    # # print results
+    # print(docs[0].page_content)
 
 
 if __name__ == '__main__':
