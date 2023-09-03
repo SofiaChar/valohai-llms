@@ -240,10 +240,10 @@ def train():
         "summarization",
         model=unwrapped_model,
         tokenizer=tokenizer,
-        max_length=100
+        max_length=100,
+        devide=0
     )
 
-    raw_datasets = raw_datasets.to(device)
     sample = raw_datasets['test'][randrange(len(raw_datasets["test"]))]
 
     print(f"dialogue: \n{sample['dialogue']}\n---------------")
