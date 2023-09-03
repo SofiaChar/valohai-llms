@@ -1,14 +1,8 @@
-import argparse
 import logging
-import math
-import os
 import random
-import torch.distributed as dist
 from random import randrange
 from langchain.embeddings.sentence_transformer import SentenceTransformerEmbeddings
-from langchain.text_splitter import CharacterTextSplitter
 from langchain.vectorstores import Chroma
-from langchain.document_loaders import TextLoader
 import datasets
 import nltk
 import numpy as np
@@ -18,13 +12,8 @@ from datasets import load_dataset, load_metric
 from torch.utils.data.dataloader import DataLoader
 from tqdm.auto import tqdm
 from accelerate import Accelerator
-from langchain.chains import VectorDBQA
-from langchain.llms import HuggingFacePipeline
-from transformers import AutoTokenizer, pipeline, AutoModelForSeq2SeqLM
-from langchain import PromptTemplate, LLMChain
 import transformers
-from langchain.chains.summarize import load_summarize_chain
-from filelock import FileLock
+
 from transformers import (
     CONFIG_MAPPING,
     MODEL_MAPPING,
@@ -255,6 +244,7 @@ def train():
     )
 
     sample = raw_datasets['test'][randrange(len(raw_datasets["test"]))]
+    sample = sample.to(device)
     print(f"dialogue: \n{sample['dialogue']}\n---------------")
 
     # summarize dialogue
