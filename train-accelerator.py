@@ -243,8 +243,9 @@ def train():
         max_length=100
     )
 
+    raw_datasets = raw_datasets.to(device)
     sample = raw_datasets['test'][randrange(len(raw_datasets["test"]))]
-    sample = sample.to(device)
+
     print(f"dialogue: \n{sample['dialogue']}\n---------------")
 
     # summarize dialogue
