@@ -3,7 +3,7 @@
     image: sofiiavalohai/valohai-llms:v1.5
     environment: staging-aws-eu-west-1-p3-8xlarge
     command:
-      - python -m torch.distributed.launch --nproc-per-node=4 train.py
+      - python torchrun --nproc-per-node=4 train.py
 
 - step:
     name: train-accelerator
