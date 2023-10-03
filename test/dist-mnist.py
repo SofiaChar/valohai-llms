@@ -113,7 +113,7 @@ def run(my_rank, world_size):
     print('in run')
     torch.manual_seed(1234)
     train_set, bsz = partition_dataset()
-    train_set.to(device)
+    # train_set.to(device)
     model = Net().to(device)
     optimizer = optim.SGD(
         model.parameters(),
