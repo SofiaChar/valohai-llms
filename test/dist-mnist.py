@@ -13,13 +13,11 @@ from torch import optim
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 
-device = torch.device("cuda")
-print('device ', device)
-
 
 class Net(nn.Module):
 
     def __init__(self):
+
         super(Net, self).__init__()
         self.conv1 = nn.Conv2d(1, 32, 3, 1)
         self.conv2 = nn.Conv2d(32, 64, 3, 1)
@@ -110,6 +108,7 @@ def average_gradients(model):
 
 
 def run(my_rank, world_size):
+    device = torch.device("cuda:{}".format(my_rank))
     print('in run')
     torch.manual_seed(1234)
     train_set, bsz = partition_dataset()
