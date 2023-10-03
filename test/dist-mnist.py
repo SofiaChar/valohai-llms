@@ -109,7 +109,7 @@ def average_gradients(model):
 
 def run(my_rank, world_size):
     device = torch.device("cuda:{}".format(my_rank))
-    print('in run')
+    print('in run on device ', device)
     torch.manual_seed(1234)
     train_set, bsz = partition_dataset()
     # train_set.to(device)
@@ -126,7 +126,7 @@ def run(my_rank, world_size):
         for data, target in train_set:
             optimizer.zero_grad()
             output = model(data.to(device))
-            loss = F.nll_loss(output, target)
+            loss = F.nll_loss(output, target.to(device))
             epoch_loss += loss.item()
             loss.backward()
             average_gradients(model)
