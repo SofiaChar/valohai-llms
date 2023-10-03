@@ -100,7 +100,7 @@ class ModelTrainer:
 
         trainer = Trainer(model=self.model_pegasus, args=trainer_args, tokenizer=self.tokenizer,
                           data_collator=seq2seq_data_collator, train_dataset=dataset_samsum_pt,
-                          eval_dataset=eval_dataset, find_unused_parameters=True)
+                          eval_dataset=eval_dataset)
 
         trainer.train()
 

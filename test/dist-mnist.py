@@ -138,7 +138,7 @@ def run(my_rank, world_size):
 
 
 def init(master_url, my_rank, world_size, fn):
-    dist.init_process_group(init_method=master_url, rank=my_rank, world_size=world_size, backend='gloo')
+    dist.init_process_group(init_method=master_url, rank=my_rank, world_size=world_size, backend='nccl')
     print('init process group')
     fn(my_rank, world_size)
 
