@@ -140,7 +140,7 @@ def train(my_rank):
 
     def partition_dataset(preprocesed_dataset, collator):
         size = dist.get_world_size()
-        bsz = int(128 / float(size))
+        bsz = int(2 / float(size))
         partition_sizes = [1.0 / size for _ in range(size)]
         partition = DataPartitioner(preprocesed_dataset, partition_sizes)
         partition = partition.use(dist.get_rank())
