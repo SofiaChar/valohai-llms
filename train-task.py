@@ -158,7 +158,7 @@ def train(my_rank):
         preprocess_function, batched=True, remove_columns=column_names
     )
 
-    train_dataset = processed_datasets["train"][:200]
+    train_dataset = processed_datasets["train"]
     eval_dataset = processed_datasets["validation"]
 
     for index in random.sample(range(len(train_dataset)), 1):
