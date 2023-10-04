@@ -289,7 +289,7 @@ def train(my_rank):
 
 def init(master_url, my_rank, world_size, fn):
     dist.init_process_group(init_method=master_url, rank=my_rank, world_size=world_size, backend='nccl')
-    fn()
+    fn(my_rank)
 
 
 if __name__ == '__main__':
