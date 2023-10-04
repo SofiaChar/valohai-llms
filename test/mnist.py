@@ -11,6 +11,9 @@ from torch import optim
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 
+device = torch.device("cuda")
+print('Current cuda device ', torch.cuda.current_device())
+
 
 class Net(nn.Module):
 
@@ -106,7 +109,6 @@ def partition_dataset():
 
 
 def run():
-    device = torch.device("cuda")
     print('in run on device ', device)
     torch.manual_seed(1234)
     train_set, bsz = partition_dataset()
