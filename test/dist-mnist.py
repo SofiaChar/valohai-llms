@@ -97,6 +97,7 @@ def partition_dataset():
         batch_size=bsz,
         shuffle=True,
     )
+    print('batch_size', bsz)
     return train_set, bsz
 
 
