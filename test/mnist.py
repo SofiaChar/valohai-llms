@@ -92,10 +92,10 @@ def partition_dataset():
     # partition = partition.use(dist.get_rank())
     train_set = DataLoader(
         dataset,
-        batch_size=4,
+        batch_size=64,
         shuffle=True,
     )
-    return train_set, 4
+    return train_set, 64
 
 
 # def average_gradients(model):
