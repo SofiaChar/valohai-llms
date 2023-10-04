@@ -9,6 +9,7 @@ import nltk
 import numpy as np
 import torch
 import valohai
+from random import Random
 from datasets import load_dataset, load_metric
 from torch.utils.data.dataloader import DataLoader
 from tqdm.auto import tqdm
@@ -16,10 +17,10 @@ import torch.multiprocessing as mp
 import transformers
 
 from filelock import FileLock
+from torch.optim import AdamW
 from transformers import (
     CONFIG_MAPPING,
     MODEL_MAPPING,
-    AdamW,
     AutoConfig,
     AutoModelForSeq2SeqLM,
     AutoTokenizer,
@@ -43,8 +44,53 @@ summarization_name_mapping = {
     "wiki_summary": ("article", "highlights"),
 }
 
-def train():
+
+class Partition:
+
+    def __init__(self, data, index):
+        self.data = data
+        self.index = index
+
+    def __len__(self):
+        return len(self.index)
+
+    def __getitem__(self, index):
+        data_idx = self.index[index]
+        return self.data[data_idx]
+
+
+class DataPartitioner:
+
+    def __init__(self, dataset, sizes=None, seed=1234):
+        if sizes is None:
+            sizes = [0.7, 0.2, 0.1]
+        self.data = dataset
+        self.partitions = []
+        rng = Random()
+        rng.seed(seed)
+        data_len = len(dataset)
+        indexes = [x for x in range(0, data_len)]
+        rng.shuffle(indexes)
+        for frac in sizes:
+            part_len = int(frac * data_len)
+            self.partitions.append(indexes[0:part_len])
+            indexes = indexes[part_len:]
+
+    def use(self, partition):
+        return Partition(self.data, self.partitions[partition])
+
+def average_gradients(model):
+    size = float(dist.get_world_size())
+    for param in model.parameters():
+        dist.all_reduce(param.grad.data, op=dist.ReduceOp.SUM)
+        param.grad.data /= size
+
+
+def train(my_rank):
+    torch.manual_seed(1234)
+
     logger = logging.getLogger(__name__)
+    device = torch.device("cuda:{}".format(my_rank))
 
     num_train_epochs = 5
     datasets.utils.logging.set_verbosity_error()
@@ -52,7 +98,6 @@ def train():
     raw_datasets = load_dataset('samsum')
     model_ckpt = "facebook/bart-large-cnn"
     tokenizer = AutoTokenizer.from_pretrained(model_ckpt)
-    device = "cuda" if torch.cuda.is_available() else "cpu"
 
     model = AutoModelForSeq2SeqLM.from_pretrained(model_ckpt).to(device)
 
@@ -93,6 +138,22 @@ def train():
         model_inputs["labels"] = labels["input_ids"]
         return model_inputs
 
+    def partition_dataset(preprocesed_dataset, collator):
+        size = dist.get_world_size()
+        bsz = int(128 / float(size))
+        partition_sizes = [1.0 / size for _ in range(size)]
+        partition = DataPartitioner(preprocesed_dataset, partition_sizes)
+        partition = partition.use(dist.get_rank())
+        set = DataLoader(
+            partition,
+            batch_size=bsz,
+            shuffle=True,
+            collate_fn=collator
+        )
+        print('batch_size', bsz)
+        return set, bsz
+
+
     processed_datasets = raw_datasets.map(
         preprocess_function, batched=True, remove_columns=column_names
     )
@@ -120,9 +181,7 @@ def train():
 
         return preds, labels
 
-    train_dataloader = DataLoader(
-        train_dataset, shuffle=True, collate_fn=data_collator, batch_size=1
-    )
+    train_dataloader, batch_size = partition_dataset(train_dataset, data_collator)
     # eval_dataloader = DataLoader(eval_dataset, collate_fn=data_collator, batch_size=1)
 
     no_decay = ["bias", "LayerNorm.weight"]
@@ -157,12 +216,18 @@ def train():
     progress_bar = tqdm(range(max_train_steps))
     completed_steps = 0
 
+    num_batches = math.ceil(len(train_dataloader.dataset) / float(batch_size))
+
     for epoch in range(num_train_epochs):
         model.train()
+        epoch_loss = 0.0
+
         for step, batch in enumerate(train_dataloader):
             outputs = model(**batch.to(device))
             loss = outputs.loss
+            epoch_loss += loss.item()
             loss.backward()
+            average_gradients(model)
 
             optimizer.step()
             lr_scheduler.step()
@@ -172,6 +237,9 @@ def train():
 
             if completed_steps >= max_train_steps:
                 break
+
+        print(f'Rank {dist.get_rank()}, epoch {epoch}: {epoch_loss / num_batches}')
+
         # model.eval()
         #
         # gen_kwargs = {
@@ -220,7 +288,7 @@ def train():
         #     unwrapped_model.save_pretrained(args.output_dir, save_function=accelerator.save)
 
 def init(master_url, my_rank, world_size, fn):
-    dist.init_process_group(init_method=master_url, rank=my_rank, world_size=world_size, backend='gloo')
+    dist.init_process_group(init_method=master_url, rank=my_rank, world_size=world_size, backend='nccl')
     fn()
 
 
@@ -233,8 +301,13 @@ if __name__ == '__main__':
     size = valohai.distributed.required_count
     rank = valohai.distributed.me().rank
 
+    print('rank ', rank)
+    print('size ', size)
+
     mp.set_start_method('spawn')
     p = mp.Process(target=init, args=(url, rank, size, train))
     p.start()
+    print('p start')
     p.join()
-    train()
+    print('p join')
+

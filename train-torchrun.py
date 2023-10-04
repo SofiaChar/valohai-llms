@@ -95,12 +95,12 @@ class ModelTrainer:
             output_dir=output_dir, num_train_epochs=self.num_epochs, warmup_steps=self.warmup_steps,
             per_device_train_batch_size=self.batch_size, per_device_eval_batch_size=self.batch_size,
             weight_decay=0.01, logging_steps=10, evaluation_strategy='steps', eval_steps=self.evaluation_steps,
-            save_steps=1e6, gradient_accumulation_steps=16, ddp_find_unused_parameters=False
+            save_steps=1e6, gradient_accumulation_steps=16, ddp_find_unused_parameters=False,
         )
 
         trainer = Trainer(model=self.model_pegasus, args=trainer_args, tokenizer=self.tokenizer,
                           data_collator=seq2seq_data_collator, train_dataset=dataset_samsum_pt,
-                          eval_dataset=eval_dataset)
+                          eval_dataset=eval_dataset, optimizers=(AdamW()))
 
         trainer.train()
 
