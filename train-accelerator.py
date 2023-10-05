@@ -131,7 +131,7 @@ def train():
         return preds, labels
 
     train_dataloader = DataLoader(
-        train_dataset[:200], shuffle=True, collate_fn=data_collator, batch_size=1
+        train_dataset, shuffle=True, collate_fn=data_collator, batch_size=1
     )
     eval_dataloader = DataLoader(eval_dataset, collate_fn=data_collator, batch_size=1)
 
