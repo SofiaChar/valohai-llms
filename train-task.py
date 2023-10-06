@@ -180,7 +180,8 @@ def train(my_rank):
         labels = ["\n".join(nltk.sent_tokenize(label)) for label in labels]
 
         return preds, labels
-
+    print(type(train_dataset))
+    print(train_dataset.shape)
     train_dataloader, batch_size = partition_dataset(train_dataset[:200], data_collator)
     # eval_dataloader = DataLoader(eval_dataset, collate_fn=data_collator, batch_size=1)
 
