@@ -5,6 +5,8 @@
     command:
       - torchrun --nproc-per-node=4 train-torchrun.py {parameters}
     parameters:
+      - name: dataset-name
+        default: "samsun"
       - name: model-ckpt
         default: "facebook/bart-large-cnn"
       - name: output-dir

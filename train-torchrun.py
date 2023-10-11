@@ -12,7 +12,7 @@ from transformers import get_scheduler
 import nltk
 
 nltk.download("punkt")
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 os.environ['TRANSFORMERS_NO_ADVISORY_WARNINGS'] = 'true'
 
 
@@ -112,7 +112,7 @@ def run(args):
     model_ckpt = args.model_ckpt
     trainer = ModelTrainer(model_ckpt=model_ckpt, batch_size=args.batch_size, num_epochs=args.num_epochs,
                            warmup_steps=args.num_epochs, evaluation_steps=args.num_epochs)
-    dataset_samsum = load_dataset('samsum')
+    dataset_samsum = load_dataset(args.dataset_name)
 
     print(f"Train dataset size: {len(dataset_samsum['train'])}")
     print(f"Test dataset size: {len(dataset_samsum['test'])}")
@@ -126,6 +126,7 @@ def run(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Train a Seq2Seq model")
+    parser.add_argument("--dataset-name", type=str, help="Pretrained model checkpoint")
     parser.add_argument("--model-ckpt", type=str, help="Pretrained model checkpoint")
     parser.add_argument("--output-dir", type=str, help="Output directory for the trained model")
     parser.add_argument("--batch-size", type=int, help="Batch size")
