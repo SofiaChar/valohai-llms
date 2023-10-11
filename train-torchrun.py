@@ -1,4 +1,5 @@
 import sys
+import argparse
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
 from datasets import load_dataset, load_metric
@@ -107,9 +108,10 @@ class ModelTrainer:
         self.model_pegasus.save_pretrained(output_dir)
 
 
-def run():
-    model_ckpt = "facebook/bart-large-cnn"
-    trainer = ModelTrainer(model_ckpt=model_ckpt)
+def run(args):
+    model_ckpt = args.model_ckpt
+    trainer = ModelTrainer(model_ckpt=model_ckpt, batch_size=args.batch_size, num_epochs=args.num_epochs,
+                           warmup_steps=args.num_epochs, evaluation_steps=args.num_epochs)
     dataset_samsum = load_dataset('samsum')
 
     print(f"Train dataset size: {len(dataset_samsum['train'])}")
@@ -118,9 +120,18 @@ def run():
     train_dataset = dataset_samsum["train"]
     eval_dataset = dataset_samsum["validation"]
 
-    output_dir = "bart-samsum-model"
+    output_dir = args.output_dir
     trainer.train(output_dir=output_dir, train_dataset=train_dataset, eval_dataset=eval_dataset)
 
 
 if __name__ == '__main__':
-    run()
+    parser = argparse.ArgumentParser(description="Train a Seq2Seq model")
+    parser.add_argument("--model-ckpt", type=str, help="Pretrained model checkpoint")
+    parser.add_argument("--output-dir", type=str, help="Output directory for the trained model")
+    parser.add_argument("--batch-size", type=int, help="Batch size")
+    parser.add_argument("--num-epochs", type=int, help="Number of training epochs")
+    parser.add_argument("--warmup-steps", type=int, help="Warmup steps")
+    parser.add_argument("--evaluation-steps", type=int, help="Evaluation steps")
+
+    args = parser.parse_args()
+    run(args)
