@@ -3,7 +3,7 @@
     image: sofiiavalohai/valohai-llms:v1.5
     environment: staging-aws-eu-west-1-p3-8xlarge
     command:
-      - torchrun --nproc-per-node=4 train-torchrun.py
+      - torchrun --nproc-per-node=4 train-torchrun.py {parameters}
     parameters:
       - name: model-ckpt
         default: "facebook/bart-large-cnn"
