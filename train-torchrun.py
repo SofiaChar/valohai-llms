@@ -101,7 +101,7 @@ class ModelTrainer:
 
         trainer = Trainer(model=self.pretrained_model, args=trainer_args, tokenizer=self.tokenizer,
                           data_collator=seq2seq_data_collator, train_dataset=dataset_samsum_pt,
-                          eval_dataset=eval_dataset)
+                          eval_dataset=eval_dataset, optimizers=(AdamW))
 
         trainer.train()
 
