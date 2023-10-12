@@ -27,16 +27,15 @@ class ModelTrainer:
 
         self.print_gpu_report()
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_ckpt)
-        self.model_pegasus = AutoModelForSeq2SeqLM.from_pretrained(self.model_ckpt).to(self.device)
+        self.pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(self.model_ckpt).to(self.device)
 
     def print_gpu_report(self):
+        from subprocess import call
         print('torch.cuda.device_count() ', torch.cuda.device_count())
         print('self.device ', self.device)
-
         print('__Python VERSION:', sys.version)
         print('__pyTorch VERSION:', torch.__version__)
         print('__CUDA VERSION')
-        from subprocess import call
         print('__CUDNN VERSION:', torch.backends.cudnn.version())
         print('__Number CUDA Devices:', torch.cuda.device_count())
         print('__Devices')
@@ -61,9 +60,9 @@ class ModelTrainer:
             inputs = self.tokenizer(article_batch, max_length=1024, truncation=True,
                                     padding="max_length", return_tensors="pt")
 
-            summaries = self.model_pegasus.generate(input_ids=inputs["input_ids"].to(self.device),
-                                                    attention_mask=inputs["attention_mask"].to(self.device),
-                                                    length_penalty=0.8, num_beams=8, max_length=128)
+            summaries = self.pretrained_model.generate(input_ids=inputs["input_ids"].to(self.device),
+                                                       attention_mask=inputs["attention_mask"].to(self.device),
+                                                       length_penalty=0.8, num_beams=8, max_length=128)
 
             decoded_summaries = [self.tokenizer.decode(s, skip_special_tokens=True,
                                                        clean_up_tokenization_spaces=True) for s in summaries]
@@ -90,7 +89,7 @@ class ModelTrainer:
     def train(self, output_dir, train_dataset, eval_dataset):
         dataset_samsum_pt = train_dataset.map(self.convert_examples_to_features, batched=True)
 
-        seq2seq_data_collator = DataCollatorForSeq2Seq(self.tokenizer, model=self.model_pegasus)
+        seq2seq_data_collator = DataCollatorForSeq2Seq(self.tokenizer, model=self.pretrained_model)
 
         trainer_args = TrainingArguments(
             output_dir=output_dir, num_train_epochs=self.num_epochs, warmup_steps=self.warmup_steps,
@@ -99,34 +98,33 @@ class ModelTrainer:
             save_steps=1e6, gradient_accumulation_steps=16, ddp_find_unused_parameters=False,
         )
 
-        trainer = Trainer(model=self.model_pegasus, args=trainer_args, tokenizer=self.tokenizer,
+        trainer = Trainer(model=self.pretrained_model, args=trainer_args, tokenizer=self.tokenizer,
                           data_collator=seq2seq_data_collator, train_dataset=dataset_samsum_pt,
                           eval_dataset=eval_dataset)
 
         trainer.train()
 
-        self.model_pegasus.save_pretrained(output_dir)
+        self.pretrained_model.save_pretrained(output_dir)
 
 
 def run(args):
-    model_ckpt = args.model_ckpt
-    trainer = ModelTrainer(model_ckpt=model_ckpt, batch_size=args.batch_size, num_epochs=args.num_epochs,
-                           warmup_steps=args.num_epochs, evaluation_steps=args.num_epochs)
     dataset_samsum = load_dataset(args.dataset_name)
-
-    print(f"Train dataset size: {len(dataset_samsum['train'])}")
-    print(f"Test dataset size: {len(dataset_samsum['test'])}")
 
     train_dataset = dataset_samsum["train"]
     eval_dataset = dataset_samsum["validation"]
 
-    output_dir = args.output_dir
-    trainer.train(output_dir=output_dir, train_dataset=train_dataset, eval_dataset=eval_dataset)
+    print(f"Train dataset size: {len(train_dataset)}")
+    print(f"Test dataset size: {len(eval_dataset)}")
+
+    trainer = ModelTrainer(model_ckpt=args.model_ckpt, batch_size=args.batch_size, num_epochs=args.num_epochs,
+                           warmup_steps=args.warmup_steps, evaluation_steps=args.evaluation_steps)
+
+    trainer.train(output_dir=args.output_dir, train_dataset=train_dataset, eval_dataset=eval_dataset)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Train a Seq2Seq model")
-    parser.add_argument("--dataset-name", type=str, help="Pretrained model checkpoint")
+    parser.add_argument("--dataset-name", type=str, help="Hugging face dataset name")
     parser.add_argument("--model-ckpt", type=str, help="Pretrained model checkpoint")
     parser.add_argument("--output-dir", type=str, help="Output directory for the trained model")
     parser.add_argument("--batch-size", type=int, help="Batch size")
