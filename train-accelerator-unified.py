@@ -1,4 +1,9 @@
 import sys
+import logging
+import datasets
+from datasets import load_dataset, load_metric
+import evaluate
+import numpy as np
 import argparse
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
@@ -6,14 +11,14 @@ from datasets import load_dataset, load_metric
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 from tqdm import tqdm
 import torch
-from transformers import DataCollatorForSeq2Seq, TrainingArguments, Trainer, TrainerCallback
+from transformers import DataCollatorForSeq2Seq, TrainingArguments, Trainer
 import os
+from accelerate import Accelerator
 from transformers import get_scheduler
 import nltk
 import valohai
-import json
+
 nltk.download("punkt")
-# os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 os.environ['TRANSFORMERS_NO_ADVISORY_WARNINGS'] = 'true'
 
 
@@ -29,6 +34,17 @@ class ModelTrainer:
         self.print_gpu_report()
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_ckpt)
         self.pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(self.model_ckpt).to(self.device)
+        self.accelerator = Accelerator()
+        self.logger = logging.getLogger(__name__)
+        self.set_logs()
+
+    def set_logs(self):
+        self.logger.info(self.accelerator.state)
+        self.logger.setLevel(logging.INFO if self.accelerator.is_local_main_process else logging.ERROR)
+        if self.accelerator.is_local_main_process:
+            datasets.utils.logging.set_verbosity_warning()
+        else:
+            datasets.utils.logging.set_verbosity_error()
 
     def print_gpu_report(self):
         from subprocess import call
@@ -90,30 +106,111 @@ class ModelTrainer:
     def train(self, output_dir, train_dataset, eval_dataset):
         dataset_samsum_pt = train_dataset.map(self.convert_examples_to_features, batched=True)
 
-        seq2seq_data_collator = DataCollatorForSeq2Seq(self.tokenizer, model=self.pretrained_model)
+        seq2seq_data_collator = DataCollatorForSeq2Seq(self.tokenizer, model=self.pretrained_model,
+                                                       pad_to_multiple_of=8 if self.accelerator.use_fp16 else None)
 
-        trainer_args = TrainingArguments(
-            output_dir=output_dir, num_train_epochs=self.num_epochs, warmup_steps=self.warmup_steps,
-            per_device_train_batch_size=self.batch_size, per_device_eval_batch_size=self.batch_size,
-            weight_decay=0.01, logging_steps=10, evaluation_strategy='steps', eval_steps=self.evaluation_steps,
-            save_steps=1e6, gradient_accumulation_steps=16, ddp_find_unused_parameters=False,
+        train_dataloader = DataLoader(
+            dataset_samsum_pt, shuffle=True, collate_fn=seq2seq_data_collator, batch_size=1
+        )
+        eval_dataloader = DataLoader(eval_dataset, collate_fn=seq2seq_data_collator, batch_size=1)
+
+        no_decay = ["bias", "LayerNorm.weight"]
+        optimizer_grouped_parameters = [
+            {
+                "params": [p for n, p in self.pretrained_model.named_parameters() if
+                           not any(nd in n for nd in no_decay)],
+                "weight_decay": 0.0,
+            },
+            {
+                "params": [p for n, p in self.pretrained_model.named_parameters() if any(nd in n for nd in no_decay)],
+                "weight_decay": 0.0,
+            },
+        ]
+        optimizer = AdamW(optimizer_grouped_parameters, lr=5e-5)
+
+        model, optimizer, train_dataloader, eval_dataloader = self.accelerator.prepare(
+            self.pretrained_model, optimizer, train_dataloader, eval_dataloader
         )
 
-        trainer = Trainer(model=self.pretrained_model, args=trainer_args, tokenizer=self.tokenizer,
-                          data_collator=seq2seq_data_collator, train_dataset=dataset_samsum_pt,
-                          eval_dataset=eval_dataset, optimizers=(AdamW), callbacks=[PrinterCallback])
+        num_update_steps_per_epoch = len(train_dataloader)
+        max_train_steps = self.num_epochs * num_update_steps_per_epoch
 
-        trainer.train()
+        lr_scheduler = get_scheduler(
+            name='linear',
+            optimizer=optimizer,
+            num_training_steps=max_train_steps,
+            num_warmup_steps=1
+        )
 
-        self.pretrained_model.save_pretrained(output_dir)
+        metric = evaluate.load("rouge")
 
+        # Train!
+        self.logger.info("***** Running training *****")
+        self.logger.info(f"  Num examples = {len(train_dataset)}")
+        self.logger.info(f"  Num Epochs = {self.num_epochs}")
 
-class PrinterCallback(TrainerCallback):
-    def on_log(self, args, state, control, logs=None, **kwargs):
-        _ = logs.pop("total_flos", None)
-        # if state.is_local_process_zero:
-        print(json.dumps(logs))
+        progress_bar = tqdm(range(max_train_steps))
+        completed_steps = 0
 
+        for epoch in range(self.num_epochs):
+            model.train()
+            for step, batch in enumerate(train_dataloader):
+                outputs = model(**batch.to(self.device))
+                loss = outputs.loss
+                self.accelerator.backward(loss)
+
+                optimizer.step()
+                lr_scheduler.step()
+                optimizer.zero_grad()
+                progress_bar.update(1)
+                completed_steps += 1
+
+                if completed_steps >= max_train_steps:
+                    break
+
+            model.eval()
+
+            gen_kwargs = {
+                "max_length": 128,
+                "num_beams": 2,
+            }
+            for step, batch in enumerate(eval_dataloader):
+                with torch.no_grad():
+                    generated_tokens = self.accelerator.unwrap_model(model).generate(
+                        batch["input_ids"],
+                        attention_mask=batch["attention_mask"],
+                        **gen_kwargs,
+                    )
+
+                    generated_tokens = self.accelerator.pad_across_processes(
+                        generated_tokens, dim=1, pad_index=self.tokenizer.pad_token_id
+                    )
+                    labels = batch["labels"]
+                    generated_tokens = self.accelerator.gather(generated_tokens).cpu().numpy()
+                    labels = self.accelerator.gather(labels).cpu().numpy()
+
+                    labels = np.where(labels != -100, labels, self.tokenizer.pad_token_id)
+                    if isinstance(generated_tokens, tuple):
+                        generated_tokens = generated_tokens[0]
+                    decoded_preds = self.tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
+                    decoded_labels = self.tokenizer.batch_decode(labels, skip_special_tokens=True)
+
+                    # decoded_preds, decoded_labels = postprocess_text(decoded_preds, decoded_labels)
+
+                    metric.add_batch(predictions=decoded_preds, references=decoded_labels)
+            result = metric.compute(use_stemmer=True)
+
+            # Extract a few results from ROUGE
+            result = {key: value * 100 for key, value in result.items()}
+
+            result = {k: round(v, 4) for k, v in result.items()}
+
+            self.logger.info(result)
+
+        if output_dir is not None:
+            self.accelerator.wait_for_everyone()
+            unwrapped_model = self.accelerator.unwrap_model(model)
+            unwrapped_model.save_pretrained(output_dir, save_function=self.accelerator.save)
 
 def run(args):
     output_dir = valohai.outputs().path(args.output_dir)
@@ -128,7 +225,8 @@ def run(args):
     trainer = ModelTrainer(model_ckpt=args.model_ckpt, batch_size=args.batch_size, num_epochs=args.num_epochs,
                            warmup_steps=args.warmup_steps, evaluation_steps=args.evaluation_steps)
 
-    trainer.train(output_dir=output_dir, train_dataset=train_dataset, eval_dataset=eval_dataset)
+    trainer.train(output_dir=output_dir, train_dataset=train_dataset,
+                  eval_dataset=eval_dataset)
 
 
 if __name__ == '__main__':
