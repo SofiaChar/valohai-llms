@@ -3,14 +3,15 @@
     image: sofiiavalohai/valohai-llms:v1.5
     environment: staging-aws-eu-west-1-p3-8xlarge
     command:
+      - pip install valohai-utils
       - torchrun --nproc-per-node=4 train-torchrun.py {parameters}
     parameters:
       - name: dataset-name
-        default: "samsun"
+        default: "samsum"
       - name: model-ckpt
         default: "facebook/bart-large-cnn"
       - name: output-dir
-        default: "valohai/outputs/bart-large-cnn"
+        default: "bart-large-cnn"
       - name: batch-size
         default: 1
       - name: num-epochs

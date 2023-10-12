@@ -10,6 +10,7 @@ from transformers import DataCollatorForSeq2Seq, TrainingArguments, Trainer
 import os
 from transformers import get_scheduler
 import nltk
+import valohai
 
 nltk.download("punkt")
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -79,7 +80,7 @@ class ModelTrainer:
 
         with self.tokenizer.as_target_tokenizer():
             target_encodings = self.tokenizer(example_batch['summary'], padding="max_length", truncation=True)
-        # print("input_encodings['input_ids']", input_encodings['input_ids'])
+
         return {
             'input_ids': input_encodings['input_ids'],
             'attention_mask': input_encodings['attention_mask'],
@@ -108,6 +109,7 @@ class ModelTrainer:
 
 
 def run(args):
+    output_dir = valohai.outputs().path(args.output_dir)
     dataset_samsum = load_dataset(args.dataset_name)
 
     train_dataset = dataset_samsum["train"]
@@ -119,7 +121,7 @@ def run(args):
     trainer = ModelTrainer(model_ckpt=args.model_ckpt, batch_size=args.batch_size, num_epochs=args.num_epochs,
                            warmup_steps=args.warmup_steps, evaluation_steps=args.evaluation_steps)
 
-    trainer.train(output_dir=args.output_dir, train_dataset=train_dataset, eval_dataset=eval_dataset)
+    trainer.train(output_dir=output_dir, train_dataset=train_dataset, eval_dataset=eval_dataset)
 
 
 if __name__ == '__main__':
