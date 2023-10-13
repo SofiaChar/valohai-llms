@@ -37,6 +37,8 @@
     environment: staging-aws-eu-west-1-p3-8xlarge
     command:
       - pip install accelerate evaluate absl-py rouge-score
+      - - accelerate config
+        - accelerate test
       - python -m accelerate.commands.launch --num_processes=4 train-accelerator-unified.py
 
 
