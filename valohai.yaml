@@ -37,9 +37,23 @@
     environment: staging-aws-eu-west-1-p3-8xlarge
     command:
       - pip install accelerate evaluate absl-py rouge-score
-      - accelerate config
-      - accelerate test
-      - python -m accelerate.commands.launch --num_processes=4 train-accelerator-unified.py
+      - python -m accelerate.commands.launch --num_processes=4 train-accelerator-unified.py {parameters}
+    parameters:
+      - name: dataset-name
+        default: "samsum"
+      - name: model-ckpt
+        default: "facebook/bart-large-cnn"
+      - name: output-dir
+        default: "bart-large-cnn"
+      - name: batch-size
+        default: 1
+      - name: num-epochs
+        default: 1
+      - name: warmup-steps
+        default: 500
+      - name: evaluation-steps
+        default: 500
+
 
 
 - step:
