@@ -24,7 +24,6 @@ os.environ['TRANSFORMERS_NO_ADVISORY_WARNINGS'] = 'true'
 
 class ModelTrainer:
     def __init__(self, model_ckpt, batch_size=1, num_epochs=1, warmup_steps=500, evaluation_steps=500):
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model_ckpt = model_ckpt
         self.batch_size = batch_size
         self.num_epochs = num_epochs
@@ -37,6 +36,8 @@ class ModelTrainer:
         self.accelerator = Accelerator()
         self.logger = logging.getLogger(__name__)
         self.set_logs()
+        self.device = self.accelerator.device
+
 
     def set_logs(self):
         self.logger.info(self.accelerator.state)
