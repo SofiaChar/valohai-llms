@@ -61,7 +61,7 @@ def train():
     raw_datasets = load_dataset('samsum')
     model_ckpt = "facebook/bart-large-cnn"
     tokenizer = AutoTokenizer.from_pretrained(model_ckpt)
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = accelerator.device
 
     model = AutoModelForSeq2SeqLM.from_pretrained(model_ckpt).to(device)
 
