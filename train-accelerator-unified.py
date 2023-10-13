@@ -18,7 +18,7 @@ from transformers import get_scheduler
 import nltk
 import valohai
 
-nltk.download("punkt")
+# nltk.download("punkt")
 os.environ['TRANSFORMERS_NO_ADVISORY_WARNINGS'] = 'true'
 
 
