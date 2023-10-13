@@ -29,14 +29,14 @@ class ModelTrainer:
         self.num_epochs = num_epochs
         self.warmup_steps = warmup_steps
         self.evaluation_steps = evaluation_steps
+        self.accelerator = Accelerator()
+        self.device = self.accelerator.device
 
         self.print_gpu_report()
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_ckpt)
         self.pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(self.model_ckpt).to(self.device)
-        self.accelerator = Accelerator()
         self.logger = logging.getLogger(__name__)
         self.set_logs()
-        self.device = self.accelerator.device
 
 
     def set_logs(self):
