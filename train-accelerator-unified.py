@@ -93,10 +93,10 @@ class ModelTrainer:
         return score
 
     def convert_examples_to_features(self, example_batch):
-        input_encodings = self.tokenizer(example_batch['dialogue'], padding="max_length", truncation=True)
+        input_encodings = self.tokenizer(example_batch['dialogue'], padding="max_length", truncation=True, max_length=1024)
 
         # with self.tokenizer.as_target_tokenizer():
-        target_encodings = self.tokenizer(text_target=example_batch['summary'], padding="max_length", truncation=True, )
+        target_encodings = self.tokenizer(text_target=example_batch['summary'], padding="max_length", truncation=True, max_length=128)
 
         return {
             'input_ids': input_encodings['input_ids'],

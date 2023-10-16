@@ -82,7 +82,6 @@ def train():
 
     # Temporarily set max_target_length for training.
     max_target_length = 128
-    padding = "max_length"
 
     def preprocess_function(examples):
         inputs = examples[text_column_name]
