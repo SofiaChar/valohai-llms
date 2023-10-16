@@ -106,14 +106,17 @@ class ModelTrainer:
 
     def train(self, output_dir, train_dataset, eval_dataset):
         dataset_samsum_pt = train_dataset.map(self.convert_examples_to_features, batched=True)
+        self.logger.info("***** dataset_samsum_pt is mapped *****")
 
         seq2seq_data_collator = DataCollatorForSeq2Seq(self.tokenizer, model=self.pretrained_model,
                                                        pad_to_multiple_of=8 if self.accelerator.use_fp16 else None)
+        self.logger.info("***** Datacollator is done *****")
 
         train_dataloader = DataLoader(
             dataset_samsum_pt, shuffle=True, collate_fn=seq2seq_data_collator, batch_size=1
         )
         eval_dataloader = DataLoader(eval_dataset, collate_fn=seq2seq_data_collator, batch_size=1)
+        self.logger.info("***** Dataloaders are done *****")
 
         no_decay = ["bias", "LayerNorm.weight"]
         optimizer_grouped_parameters = [

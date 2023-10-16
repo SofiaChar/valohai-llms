@@ -1,5 +1,6 @@
 import sys
 import argparse
+import datetime
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
 from datasets import load_dataset, load_metric
@@ -105,7 +106,15 @@ class ModelTrainer:
 
         trainer.train()
 
+
+    def save_metadata(self, output_dir):
         self.pretrained_model.save_pretrained(output_dir)
+        metadata_path = os.path.join(output_dir, "pytorch_model.bin.metadata.json")
+        metadata = {
+            "valohai.alias": f'dev-{datetime.date.today()}-model',
+        }
+        with open(metadata_path, "w") as outfile:
+            json.dump(metadata, outfile)
 
 
 class PrinterCallback(TrainerCallback):
