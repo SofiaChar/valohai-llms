@@ -105,7 +105,7 @@ class ModelTrainer:
                           eval_dataset=eval_dataset, callbacks=[PrinterCallback])
 
         trainer.train()
-
+        self.save_metadata(output_dir)
 
     def save_metadata(self, output_dir):
         self.pretrained_model.save_pretrained(output_dir)
@@ -120,7 +120,6 @@ class ModelTrainer:
 class PrinterCallback(TrainerCallback):
     def on_log(self, args, state, control, logs=None, **kwargs):
         _ = logs.pop("total_flos", None)
-        # if state.is_local_process_zero:
         print(json.dumps(logs))
 
 
