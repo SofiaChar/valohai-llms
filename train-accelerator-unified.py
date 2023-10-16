@@ -132,6 +132,7 @@ class ModelTrainer:
         model, optimizer, train_dataloader, eval_dataloader = self.accelerator.prepare(
             self.pretrained_model, optimizer, train_dataloader, eval_dataloader
         )
+        self.logger.info("***** Accelerator prepared for training *****")
 
         num_update_steps_per_epoch = len(train_dataloader)
         max_train_steps = self.num_epochs * num_update_steps_per_epoch
