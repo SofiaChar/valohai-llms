@@ -106,8 +106,9 @@ class ModelTrainer:
 
     def train(self, output_dir, train_dataset, eval_dataset):
         self.logger.info("***** in train *****")
+        column_names = train_dataset.column_names
 
-        dataset_samsum_pt = train_dataset.map(self.convert_examples_to_features, batched=True)
+        dataset_samsum_pt = train_dataset.map(self.convert_examples_to_features, batched=True, remove_columns=column_names)
         self.logger.info("***** dataset_samsum_pt is mapped *****")
 
         seq2seq_data_collator = DataCollatorForSeq2Seq(self.tokenizer, model=self.pretrained_model,
