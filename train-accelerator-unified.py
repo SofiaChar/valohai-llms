@@ -117,6 +117,7 @@ class ModelTrainer:
         train_dataloader = DataLoader(
             dataset_samsum_pt, shuffle=True, collate_fn=seq2seq_data_collator, batch_size=1
         )
+        print('train_dataloader ', train_dataloader)
         eval_dataloader = DataLoader(eval_dataset, collate_fn=seq2seq_data_collator, batch_size=1)
         self.logger.info("***** Dataloaders are done *****")
 
