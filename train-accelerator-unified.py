@@ -172,7 +172,7 @@ class ModelTrainer:
                 progress_bar.update(1)
                 completed_steps += 1
 
-                logs = {'loss': loss.cpu().numpy(), 'steps': completed_steps}
+                logs = {'loss': loss.detach().numpy(), 'steps': completed_steps}
                 self.dump_valohai_metadata(logs)
 
                 if completed_steps >= max_train_steps:
