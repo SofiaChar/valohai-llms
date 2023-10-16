@@ -105,6 +105,8 @@ class ModelTrainer:
         }
 
     def train(self, output_dir, train_dataset, eval_dataset):
+        self.logger.info("***** in train *****")
+
         dataset_samsum_pt = train_dataset.map(self.convert_examples_to_features, batched=True)
         self.logger.info("***** dataset_samsum_pt is mapped *****")
 
