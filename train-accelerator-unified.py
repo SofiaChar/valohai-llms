@@ -1,6 +1,8 @@
 import sys
 import logging
 import datasets
+import datetime
+import json
 from datasets import load_dataset, load_metric
 import evaluate
 import numpy as np
@@ -170,6 +172,9 @@ class ModelTrainer:
                 progress_bar.update(1)
                 completed_steps += 1
 
+                logs = {'loss': loss, 'steps': completed_steps}
+                self.dump_valohai_metadata(logs)
+
                 if completed_steps >= max_train_steps:
                     break
 
@@ -210,12 +215,28 @@ class ModelTrainer:
 
             result = {k: round(v, 4) for k, v in result.items()}
 
+            logs = {'eval_metric': result, 'epoch': epoch}
+            self.dump_valohai_metadata(logs)
+
             self.logger.info(result)
 
         if output_dir is not None:
             self.accelerator.wait_for_everyone()
             unwrapped_model = self.accelerator.unwrap_model(model)
-            unwrapped_model.save_pretrained(output_dir, save_function=self.accelerator.save)
+            self.save_metadata(unwrapped_model, output_dir)
+            # unwrapped_model.save_pretrained(output_dir, save_function=self.accelerator.save)
+
+    def save_metadata(self, model, output_dir):
+        model.save_pretrained(output_dir)
+        metadata_path = os.path.join(output_dir, "pytorch_model.bin.metadata.json")
+        metadata = {
+            "valohai.alias": f'dev-{datetime.date.today()}-model',
+        }
+        with open(metadata_path, "w") as outfile:
+            json.dump(metadata, outfile)
+
+    def dump_valohai_metadata(self, logs):
+        print(json.dumps(logs))
 
 def run(args):
     output_dir = valohai.outputs().path(args.output_dir)
