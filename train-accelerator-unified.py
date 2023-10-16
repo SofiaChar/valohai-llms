@@ -215,7 +215,8 @@ class ModelTrainer:
 
             result = {k: round(v, 4) for k, v in result.items()}
 
-            logs = {'eval_metric': result, 'epoch': epoch}
+            logs = result.copy()
+            logs['epoch']= epoch
             self.dump_valohai_metadata(logs)
 
             self.logger.info(result)
