@@ -2,3 +2,4 @@ stuff/chat_data.json
 Dockerfile
 stuff/HDFC_Faq.txt
 .idea/*
+.DS_Store

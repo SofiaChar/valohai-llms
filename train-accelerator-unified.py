@@ -172,8 +172,9 @@ class ModelTrainer:
                 progress_bar.update(1)
                 completed_steps += 1
 
-                logs = {'loss': loss.item(), 'steps': completed_steps}
-                self.dump_valohai_metadata(logs)
+                if completed_steps%300==0:
+                    logs = {'loss': loss.item(), 'step': completed_steps}
+                    self.dump_valohai_metadata(logs)
 
                 if completed_steps >= max_train_steps:
                     break
@@ -215,9 +216,9 @@ class ModelTrainer:
 
             result = {k: round(v, 4) for k, v in result.items()}
 
-            logs = result.copy()
-            logs['epoch']= epoch
-            self.dump_valohai_metadata(logs)
+            val_logs = result.copy()
+            val_logs['epoch']= epoch
+            self.dump_valohai_metadata(val_logs)
 
             self.logger.info(result)
 
@@ -225,7 +226,6 @@ class ModelTrainer:
             self.accelerator.wait_for_everyone()
             unwrapped_model = self.accelerator.unwrap_model(model)
             self.save_metadata(unwrapped_model, output_dir)
-            # unwrapped_model.save_pretrained(output_dir, save_function=self.accelerator.save)
 
     def save_metadata(self, model, output_dir):
         model.save_pretrained(output_dir)
@@ -237,7 +237,6 @@ class ModelTrainer:
             json.dump(metadata, outfile)
 
     def dump_valohai_metadata(self, logs):
-        print()
         print(json.dumps(logs))
 
 def run(args):

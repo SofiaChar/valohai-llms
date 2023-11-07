@@ -182,7 +182,7 @@ def train(my_rank):
         return preds, labels
     print(type(train_dataset))
     print(train_dataset.shape)
-    train_dataloader, batch_size = partition_dataset(train_dataset[:200], data_collator)
+    train_dataloader, batch_size = partition_dataset(train_dataset, data_collator)
     # eval_dataloader = DataLoader(eval_dataset, collate_fn=data_collator, batch_size=1)
 
     no_decay = ["bias", "LayerNorm.weight"]
