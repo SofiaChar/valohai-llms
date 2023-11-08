@@ -61,7 +61,7 @@
     image: sofiiavalohai/valohai-llms:v1.5
     environment: staging-aws-eu-west-1-p3-8xlarge
     command:
-      - python train-task.py
+      - python train-task-new.py
     environment-variables:
       - name: VH_DOCKER_NETWORK
         default: host
