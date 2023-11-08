@@ -159,7 +159,7 @@ def train(my_rank):
     )
 
     train_dataset = processed_datasets["train"]
-    print(train_dataset)
+    train_dataset = train_dataset.shard(num_shards=10, index=0)
     eval_dataset = processed_datasets["validation"]
 
     for index in random.sample(range(len(train_dataset)), 1):
