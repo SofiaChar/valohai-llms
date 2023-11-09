@@ -62,7 +62,7 @@
     environment: staging-aws-eu-west-1-p3-8xlarge
     command:
       - pip install accelerate evaluate absl-py rouge-score
-      - python train-task-new.py
+      - python train-task-new.py {parameters}
     environment-variables:
       - name: VH_DOCKER_NETWORK
         default: host
