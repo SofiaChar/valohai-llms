@@ -265,6 +265,7 @@ class ModelTrainer:
             }
             for step, batch in enumerate(eval_dataloader):
                 with torch.no_grad():
+                    batch.to(self.device)
                     generated_tokens = self.accelerator.unwrap_model(model).generate(
                         batch["input_ids"],
                         attention_mask=batch["attention_mask"],
