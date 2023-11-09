@@ -54,8 +54,6 @@
       - name: evaluation-steps
         default: 500
 
-
-
 - step:
     name: train-task
     image: sofiiavalohai/valohai-llms:v1.5

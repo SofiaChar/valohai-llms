@@ -83,6 +83,7 @@ class ModelTrainer:
         self.warmup_steps = warmup_steps
         self.evaluation_steps = evaluation_steps
         self.device = None
+        self.accelerator = Accelerator()
 
         self.print_gpu_report()
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_ckpt)
@@ -172,8 +173,9 @@ class ModelTrainer:
         print('batch_size', bsz)
         return set, bsz
 
-    def train(self, output_dir, train_dataset, eval_dataset, device):
+    def train(self, output_dir, train_dataset, eval_dataset, logger, device):
         self.device = device
+        self.logger = logger
         column_names = train_dataset.column_names
         model = self.pretrained_model
 
@@ -191,7 +193,7 @@ class ModelTrainer:
         #     train_dataset_samsum_pt, shuffle=True, collate_fn=seq2seq_data_collator, batch_size=1
         # )
         #
-        train_dataloader, batch_size = self.partition_dataset(train_dataset, seq2seq_data_collator)
+        train_dataloader, batch_size = self.partition_dataset(train_dataset_samsum_pt, seq2seq_data_collator)
         # eval_dataloader = DataLoader(eval_dataset, collate_fn=seq2seq_data_collator, batch_size=1)
         eval_dataloader = DataLoader(eval_dataset_samsum_pt, collate_fn=seq2seq_data_collator, batch_size=1)
 
