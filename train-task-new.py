@@ -317,6 +317,7 @@ class ModelTrainer:
 
 
 def run(my_rank, args):
+    print(args.output_dir)
     output_dir = valohai.outputs().path(args.output_dir)
     dataset_samsum = load_dataset(args.dataset_name)
 
@@ -351,7 +352,7 @@ if __name__ == '__main__':
     parser.add_argument("--warmup-steps", type=int, help="Warmup steps")
     parser.add_argument("--evaluation-steps", type=int, help="Evaluation steps")
 
-    args = parser.parse_args()
+    my_args = parser.parse_args()
 
     master_port = 1234
     master_ip = valohai.distributed.master().primary_local_ip
@@ -364,7 +365,7 @@ if __name__ == '__main__':
     print('size ', size)
 
     mp.set_start_method('spawn')
-    p = mp.Process(target=init, args=(url, rank, size, run, args))
+    p = mp.Process(target=init, args=(url, rank, size, run, my_args))
     p.start()
     print('p start')
     p.join()
