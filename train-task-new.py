@@ -87,7 +87,7 @@ class ModelTrainer:
 
         self.print_gpu_report()
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_ckpt)
-        self.pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(self.model_ckpt).to(self.device)
+        self.pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(self.model_ckpt)
         self.logger = logging.getLogger(__name__)
         self.set_logs()
 
@@ -177,7 +177,7 @@ class ModelTrainer:
         self.device = device
         self.logger = logger
         column_names = train_dataset.column_names
-        model = self.pretrained_model
+        model = self.pretrained_model.to(self.device)
 
         train_dataset_samsum_pt = train_dataset.map(self.convert_examples_to_features, batched=True,
                                                    remove_columns=column_names)
