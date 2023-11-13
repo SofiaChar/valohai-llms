@@ -147,8 +147,6 @@ class ModelTrainer:
     def convert_examples_to_features(self, example_batch):
         input_encodings = self.tokenizer(example_batch['dialogue'], padding="max_length", truncation=True,
                                          max_length=1024)
-
-        # with self.tokenizer.as_target_tokenizer():
         target_encodings = self.tokenizer(text_target=example_batch['summary'], padding="max_length", truncation=True,
                                           max_length=128)
 
@@ -189,12 +187,7 @@ class ModelTrainer:
         seq2seq_data_collator = DataCollatorForSeq2Seq(self.tokenizer, model=model,
                                                        pad_to_multiple_of=8)
 
-        # train_dataloader = DataLoader(
-        #     train_dataset_samsum_pt, shuffle=True, collate_fn=seq2seq_data_collator, batch_size=1
-        # )
-        #
         train_dataloader, batch_size = self.partition_dataset(train_dataset_samsum_pt, seq2seq_data_collator)
-        # eval_dataloader = DataLoader(eval_dataset, collate_fn=seq2seq_data_collator, batch_size=1)
         eval_dataloader = DataLoader(eval_dataset_samsum_pt, collate_fn=seq2seq_data_collator, batch_size=1)
 
         no_decay = ["bias", "LayerNorm.weight"]
@@ -265,10 +258,9 @@ class ModelTrainer:
             }
             for step, batch in enumerate(eval_dataloader):
                 with torch.no_grad():
-                    batch.to(self.device)
                     generated_tokens = self.accelerator.unwrap_model(model).generate(
-                        batch["input_ids"],
-                        attention_mask=batch["attention_mask"],
+                        batch["input_ids"].to(self.device),
+                        attention_mask=batch["attention_mask"].to(self.device),
                         **gen_kwargs,
                     )
 
