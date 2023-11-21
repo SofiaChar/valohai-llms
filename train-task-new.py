@@ -102,7 +102,6 @@ class ModelTrainer:
     def print_gpu_report(self):
         from subprocess import call
         print('torch.cuda.device_count() ', torch.cuda.device_count())
-        print('self.device ', self.device)
         print('__Python VERSION:', sys.version)
         print('__pyTorch VERSION:', torch.__version__)
         print('__CUDA VERSION')
@@ -172,7 +171,8 @@ class ModelTrainer:
         return set, bsz
 
     def train(self, output_dir, train_dataset, eval_dataset, logger, device):
-        self.device = device
+        self.device ='cuda:'+str(device)
+        print('self.device ', self.device)
         self.logger = logger
         column_names = train_dataset.column_names
         model = self.pretrained_model.to(self.device)
