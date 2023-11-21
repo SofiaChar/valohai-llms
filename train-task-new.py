@@ -317,7 +317,7 @@ def run(my_rank, args):
     dataset_samsum = load_dataset(args.dataset_name)
 
     logger = logging.getLogger(__name__)
-    device = torch.device("cuda:{}".format(my_rank))
+    device = torch.device("cuda:{}".format(0))
 
     train_dataset = dataset_samsum["train"]
     eval_dataset = dataset_samsum["validation"]
