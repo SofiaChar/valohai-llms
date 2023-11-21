@@ -171,6 +171,7 @@ class ModelTrainer:
         return set, bsz
 
     def train(self, output_dir, train_dataset, eval_dataset, logger, device):
+        self.device = device
         print('self.device ', self.device)
         self.logger = logger
         column_names = train_dataset.column_names
