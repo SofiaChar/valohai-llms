@@ -125,13 +125,17 @@ class PrinterCallback(TrainerCallback):
 
 def run(args):
     output_dir = valohai.outputs().path(args.output_dir)
-
-    for d in valohai.inputs('dataset-corpus').paths("*.json"):
-        print(d)
-    dataset_samsum = load_dataset(valohai.inputs('dataset-corpus').path())
+    data_path = os.path.dirname(valohai.inputs('dataset').path())
+    dataset_samsum = load_dataset(
+        'json',
+        data_files={
+            'train': os.path.join(data_path, 'train.json'),
+            'val': os.path.join(data_path, 'val.json'),
+        },
+    )
 
     train_dataset = dataset_samsum["train"]
-    eval_dataset = dataset_samsum["validation"]
+    eval_dataset = dataset_samsum["val"]
 
     print(f"Train dataset size: {len(train_dataset)}")
     print(f"Test dataset size: {len(eval_dataset)}")

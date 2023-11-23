@@ -19,8 +19,10 @@
       - name: evaluation-steps
         default: 500
     inputs:
-      - name: dataset-corpus
-        default: s3://dd-sample-bucket/llm-example/corpus.7z
+      - name: dataset
+        default:
+          - s3://dd-sample-bucket/llm-example/train.json
+          - s3://dd-sample-bucket/llm-example/test.json
       - name: dataset-infos
         default:  s3://dd-sample-bucket/llm-example/dataset_infos.json
 
