@@ -126,15 +126,6 @@ class PrinterCallback(TrainerCallback):
 def run(args):
     output_dir = valohai.outputs().path(args.output_dir)
     data_path = os.path.dirname(valohai.inputs('dataset').path())
-
-    ph = os.path.join(data_path, 'val.json')
-    f = open(ph)
-    data = json.load(f)
-    print(data)
-
-    f.close()
-
-    print('Val path', os.path.join(data_path, 'val.json'))
     dataset_samsum = load_dataset(
         'json',
         data_files={

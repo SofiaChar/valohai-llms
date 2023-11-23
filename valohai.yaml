@@ -22,7 +22,7 @@
       - name: dataset
         default:
           - s3://dd-sample-bucket/llm-example/train.json
-          - s3://dd-sample-bucket/llm-example/test.json
+          - s3://dd-sample-bucket/llm-example/val.json
       - name: dataset-infos
         default:  s3://dd-sample-bucket/llm-example/dataset_infos.json
 
