@@ -31,6 +31,8 @@ from transformers import get_scheduler
 import nltk
 import valohai
 
+import helpers
+
 # nltk.download("punkt")
 os.environ['TRANSFORMERS_NO_ADVISORY_WARNINGS'] = 'true'
 
@@ -297,19 +299,11 @@ class ModelTrainer:
         if output_dir is not None:
             self.accelerator.wait_for_everyone()
             unwrapped_model = self.accelerator.unwrap_model(model)
-            self.save_metadata(unwrapped_model, output_dir)
+            helpers.save_valohai_metadata(unwrapped_model, output_dir)
+    @staticmethod
+    def dump_valohai_metadata(logs):
+            print(json.dumps(logs))
 
-    def save_metadata(self, model, output_dir):
-        model.save_pretrained(output_dir)
-        metadata_path = os.path.join(output_dir, "pytorch_model.bin.metadata.json")
-        metadata = {
-            "valohai.alias": f'dev-{datetime.date.today()}-model',
-        }
-        with open(metadata_path, "w") as outfile:
-            json.dump(metadata, outfile)
-
-    def dump_valohai_metadata(self, logs):
-        print(json.dumps(logs))
 
 
 def run(my_rank, args):

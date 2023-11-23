@@ -13,6 +13,9 @@ from transformers import get_scheduler
 import nltk
 import valohai
 import json
+
+import helpers
+
 nltk.download("punkt")
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 os.environ['TRANSFORMERS_NO_ADVISORY_WARNINGS'] = 'true'
@@ -105,16 +108,9 @@ class ModelTrainer:
                           eval_dataset=eval_dataset, callbacks=[PrinterCallback])
 
         trainer.train()
-        self.save_metadata(output_dir)
+        helpers.save_valohai_metadata(self.pretrained_model, output_dir)
 
-    def save_metadata(self, output_dir):
-        self.pretrained_model.save_pretrained(output_dir)
-        metadata_path = os.path.join(output_dir, "pytorch_model.bin.metadata.json")
-        metadata = {
-            "valohai.alias": f'dev-{datetime.date.today()}-model',
-        }
-        with open(metadata_path, "w") as outfile:
-            json.dump(metadata, outfile)
+
 
 
 class PrinterCallback(TrainerCallback):

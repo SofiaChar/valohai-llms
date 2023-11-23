@@ -1,13 +1,12 @@
 import sys
 import logging
-import datasets
 import datetime
 import json
-from datasets import load_dataset, load_metric
 import evaluate
 import numpy as np
 import argparse
 from torch.optim import AdamW
+import datasets
 from torch.utils.data import DataLoader
 from datasets import load_dataset, load_metric
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
@@ -17,10 +16,9 @@ from transformers import DataCollatorForSeq2Seq, TrainingArguments, Trainer
 import os
 from accelerate import Accelerator
 from transformers import get_scheduler
-import nltk
 import valohai
+import helpers
 
-# nltk.download("punkt")
 os.environ['TRANSFORMERS_NO_ADVISORY_WARNINGS'] = 'true'
 
 
@@ -225,16 +223,7 @@ class ModelTrainer:
         if output_dir is not None:
             self.accelerator.wait_for_everyone()
             unwrapped_model = self.accelerator.unwrap_model(model)
-            self.save_metadata(unwrapped_model, output_dir)
-
-    def save_metadata(self, model, output_dir):
-        model.save_pretrained(output_dir)
-        metadata_path = os.path.join(output_dir, "pytorch_model.bin.metadata.json")
-        metadata = {
-            "valohai.alias": f'dev-{datetime.date.today()}-model',
-        }
-        with open(metadata_path, "w") as outfile:
-            json.dump(metadata, outfile)
+            helpers.save_valohai_metadata(unwrapped_model, output_dir)
 
     def dump_valohai_metadata(self, logs):
         print(json.dumps(logs))
