@@ -71,8 +71,6 @@
       - name: VH_DOCKER_NETWORK
         default: host
     parameters:
-      - name: dataset-name
-        default: "samsum"
       - name: model-ckpt
         default: "facebook/bart-large-cnn"
       - name: output-dir
@@ -85,6 +83,11 @@
         default: 500
       - name: evaluation-steps
         default: 500
+    inputs:
+      - name: dataset
+        default:
+          - s3://dd-sample-bucket/llm-example/train.json
+          - s3://dd-sample-bucket/llm-example/val.json
 
 - step:
     name: connect
