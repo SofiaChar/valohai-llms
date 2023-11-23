@@ -88,6 +88,13 @@
         default:
           - s3://dd-sample-bucket/llm-example/train.json
           - s3://dd-sample-bucket/llm-example/val.json
+          -
+- task:
+    step: train-task
+    name: task 5 random
+    type: distributed
+    execution-count: 4
+    maximum-queued-executions: 4
 
 - step:
     name: connect
