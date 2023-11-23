@@ -128,7 +128,7 @@ def run(args):
 
     for d in valohai.inputs('dataset-corpus').paths("*.json"):
         print(d)
-    dataset_samsum = load_dataset(d)
+    dataset_samsum = load_dataset(valohai.inputs('dataset-corpus').path())
 
     train_dataset = dataset_samsum["train"]
     eval_dataset = dataset_samsum["validation"]
