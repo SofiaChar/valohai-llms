@@ -130,12 +130,12 @@ def run(args):
         'json',
         data_files={
             'train': os.path.join(data_path, 'train.json'),
-            'val': os.path.join(data_path, 'val.json'),
+            'validation': os.path.join(data_path, 'val.json'),
         },
     )
 
     train_dataset = dataset_samsum["train"]
-    eval_dataset = dataset_samsum["val"]
+    eval_dataset = dataset_samsum["validation"]
 
     print(f"Train dataset size: {len(train_dataset)}")
     print(f"Test dataset size: {len(eval_dataset)}")
