@@ -315,11 +315,18 @@ class ModelTrainer:
 def run(my_rank, args):
     print(args.output_dir)
     output_dir = valohai.outputs().path(args.output_dir)
-    dataset_samsum = load_dataset(args.dataset_name)
 
     logger = logging.getLogger(__name__)
     device = torch.device("cuda:{}".format(0))
 
+    data_path = os.path.dirname(valohai.inputs('dataset').path())
+    dataset_samsum = load_dataset(
+        'json',
+        data_files={
+            'train': os.path.join(data_path, 'train.json'),
+            'validation': os.path.join(data_path, 'val.json'),
+        },
+    )
     train_dataset = dataset_samsum["train"]
     eval_dataset = dataset_samsum["validation"]
 
@@ -340,7 +347,6 @@ def init(master_url, my_rank, world_size, fn, args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Train a Seq2Seq model")
-    parser.add_argument("--dataset-name", type=str, help="Hugging face dataset name")
     parser.add_argument("--model-ckpt", type=str, help="Pretrained model checkpoint")
     parser.add_argument("--output-dir", type=str, help="Output directory for the trained model")
     parser.add_argument("--batch-size", type=int, help="Batch size")
@@ -357,12 +363,7 @@ if __name__ == '__main__':
     size = valohai.distributed.required_count
     rank = valohai.distributed.me().rank
 
-    print('rank ', rank)
-    print('size ', size)
-
     mp.set_start_method('spawn')
     p = mp.Process(target=init, args=(url, rank, size, run, my_args))
     p.start()
-    print('p start')
     p.join()
-    print('p join')
