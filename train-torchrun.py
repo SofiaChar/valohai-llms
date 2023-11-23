@@ -125,7 +125,10 @@ class PrinterCallback(TrainerCallback):
 
 def run(args):
     output_dir = valohai.outputs().path(args.output_dir)
-    dataset_samsum = load_dataset(args.dataset_name)
+    dataset = valohai.inputs('dataset-corpus').paths("*.json")
+    for d in dataset:
+        print(d)
+    dataset_samsum = load_dataset(dataset)
 
     train_dataset = dataset_samsum["train"]
     eval_dataset = dataset_samsum["validation"]
@@ -141,7 +144,6 @@ def run(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Train a Seq2Seq model")
-    parser.add_argument("--dataset-name", type=str, help="Hugging face dataset name")
     parser.add_argument("--model-ckpt", type=str, help="Pretrained model checkpoint")
     parser.add_argument("--output-dir", type=str, help="Output directory for the trained model")
     parser.add_argument("--batch-size", type=int, help="Batch size")

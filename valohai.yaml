@@ -6,8 +6,6 @@
       - pip install valohai-utils
       - torchrun --nproc-per-node=4 train-torchrun.py {parameters}
     parameters:
-      - name: dataset-name
-        default: "samsum"
       - name: model-ckpt
         default: "facebook/bart-large-cnn"
       - name: output-dir
@@ -20,6 +18,11 @@
         default: 500
       - name: evaluation-steps
         default: 500
+    inputs:
+      - name: dataset-corpus
+        default: s3://dd-sample-bucket/llm-example/corpus.7z
+      - name: dataset-infos
+        default:  s3://dd-sample-bucket/llm-example/dataset_infos.json
 
 - step:
     name: train-accelerator
