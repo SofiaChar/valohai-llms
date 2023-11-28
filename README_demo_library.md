@@ -34,17 +34,17 @@ Create a new Valohai project and connect it the [valohai-llms](https://github.co
 We are fine-tuning **Bert Large CNN** model with summarization dataset from Samsung called **SAMSum**.
 
 The repo consists of three main scripts that enable distributed training:
-    * Distributed training within one machine (should have more than 1 GPU):
-      * **Torchrun - the feature from Pytorch**. 
-        * Doesn't really need any changes to the regular training script.
-        * In our case we use transformers.Trainer - distribution is managed fully by torchrun.
-      * **Accelerate - the tool from Hugging Face - Accelerator**.
-        * Requires some changes to the regular training script (Acelerator specific - **NOT Valohai specific**)
-        * We use the regular training loop.
-    * **Distributed training between few machines (one GPU per each is fine)**:
-      * Uses valohai.distributed feature. Some extra code - Valohai specific - is required.
-      * We have to do data partition (divide the dataset into parts, subset per machine)
-      * We calculate average gradients (between machines) after each step of the training.
+* Distributed training within one machine (should have more than 1 GPU):
+  * **Torchrun - the feature from Pytorch**. 
+    * Doesn't really need any changes to the regular training script.
+    * In our case we use transformers.Trainer - distribution is managed fully by torchrun.
+  * **Accelerate - the tool from Hugging Face - Accelerator**.
+    * Requires some changes to the regular training script (Acelerator specific - **NOT Valohai specific**)
+    * We use the regular training loop.
+* **Distributed training between few machines (one GPU per each is fine)**:
+  * Uses valohai.distributed feature. Some extra code - Valohai specific - is required.
+  * We have to do data partition (divide the dataset into parts, subset per machine)
+  * We calculate average gradients (between machines) after each step of the training.
 
 ### Demo :popcorn:
 
