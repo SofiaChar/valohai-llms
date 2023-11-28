@@ -7,15 +7,17 @@ a distributed manner.
 
 ## When to use this demo?
 
-The customer:
-* interested in creating LLM with their data
-* realizes that running LLM on one machine is slow and costly
-* improving language model performance for specific tasks is a priority
+This demo is perfect when:
+
+* The customer has some hands-on experience with Language Models (LLMs), especially in using them for tasks like making predictions and, if possible, tweaking or training them.
+
+* The top priority is making these language models work even better for specific jobs or tasks by fine-tuning them.
 
 ### When NOT to use this demo?
-This is a long and complex demo. Don't prioritise this demo unless the customer's has a strong engineering focus and
-a highly interested in training LLMs in scalable, distributed manner.
 
+This demo is not suitable when:
+
+* The customer hasn't begun working with Language Models (LLMs) yet and is merely considering the possibility of using them. In such cases, it's recommended to focus on demonstrating the Hugging Face step.
 
 ## Video
 
@@ -25,46 +27,66 @@ a highly interested in training LLMs in scalable, distributed manner.
 > We have an existing project that's connected to the right Git repository and allows you to demo this easily.
 
 ### Before the demo:
-1. Create a new Valohai project and connect it the [valohai-llms](https://github.com/SofiaChar/valohai-distributed-llms) repository.
-   * You can also use [this project]
-2. The repo consists of three main scripts that enable distributed training:
+Create a new Valohai project and connect it the [valohai-llms](https://github.com/SofiaChar/valohai-distributed-llms) repository.
+   * You can also use [this project](https://app.valohai.com/p/SharkOrg/llms-distributed-example/)
+
+#### Overview:
+We are fine-tuning **Bert Large CNN** model with summarization dataset from Samsung called **SAMSum**.
+
+The repo consists of three main scripts that enable distributed training:
     * Distributed training within one machine (should have more than 1 GPU):
       * **Torchrun - the feature from Pytorch**. 
         * Doesn't really need any changes to the regular training script.
         * In our case we use transformers.Trainer - distribution is managed fully by torchrun.
-        * To run we use `torchrun --nproc-per-node=4 train-torchrun.py`
       * **Accelerate - the tool from Hugging Face - Accelerator**.
-        * Requires some changes to the regular training script.
+        * Requires some changes to the regular training script (Acelerator specific - **NOT Valohai specific**)
         * We use the regular training loop.
-        * To run we use `python -m accelerate.commands.launch --num_processes=4 train-accelerator.py`
     * **Distributed training between few machines (one GPU per each is fine)**:
-      * Uses valohai.distributed feature. Of course some extra code is required.
+      * Uses valohai.distributed feature. Some extra code - Valohai specific - is required.
       * We have to do data partition (divide the dataset into parts, subset per machine)
       * We calculate average gradients (between machines) after each step of the training.
-      * `python train-task.py`
 
-We are fine-tuning **Bert Large CNN** model with summarization dataset from Samsung called **SAMSum**.
 ### Demo :popcorn:
 
-For the demo we need `p3.8xlarge` machine, sometimes it takes time to get it, so better to have it ready when the demo starts. 
+#### Beginning - Showing completed execution - Fine-tuning LLM within one machine:
+We are fine-tuning **Bert Large CNN** model with summarization dataset from Samsung called **SAMSum**.
+Although Valohai does not care which model of framework you are using.
 
-#### Distribute within one machine:
-1. Create execution `train-accelerator`. Show that in the command we have `--num_processes=4`, which means that the work will be distributed between all 4 GPUs of the machine.
-2. Wait until everything is prepared and the training have started: (9%|▊ | 343/3683 [02:40<**15:55**). Show that the whole training is going to take 15 minutes.
-3. Stop this execution, and copy this execution change only one parameter in command `--num_processes=2`.
-4. After everything is prepared, you will see that now it will take 2 times longer to fine-tune. (9%|▊ | 643/7366 [02:40<**27:55**)
+1. Show the pinned execution `train-torchrun`. This job does distributed fine-tuning of LLM **within one machine with 4 GPUs**. 
+2. General info about the scrpit:
+   * We load the dataset from S3 bucket
+   * The model comes from Hugging Face in this case; It can also be loaded from external data sources like S3 bucket.
+   * We save the logs to Valohai, so it can be visualized in Metadata tab.
+   * The fine-tuned model is saved in the Outputs tab.
+     * Optional: The model is also saved as Valohai Dataset (llm-models) with an alias.
+3. Go through the Details tab:
+   * We use powerful and expensive machine with lots of memory, with 32 CPUs and 4 GPUs:
+     * Mention that this type of machines are often hard to get - high demand. Sometimes you can wait few hours to get the machine.
+   * The distribution is done with torchrun by Pytorch - **Nothing Valohai specific** is needed in the code.
+   * Show that training the model for one epoch took 25 minutes (which is fast for LLM) and the price is ~5.5$
+Mention that this approach can be used to distribute between GPUs on your on-prem machine.
 
-#### Distribute between few machines:
-1. Create Task using the `train-task`. Show that now we use cheaper machine with one GPU -`g4dn.xlarge`.
-2. Choose Task type - Distributed. **Execution count 2**. Run the Task.
-3. Go to execution and show: 
-    * `Announcing distributed group membership, I am 1. All 2/2 members announced themselves in 0.00 seconds...`
-4. Show that **737 steps** are need to finish the fine-tuning.
-5. Create another Task set **execution count to 4**. 
-6. Show that now we have 4 members
-   * `3/4 members in distributed group after 2.23 seconds... All 4/4 members announced themselves ...`
-7. Show that **368 steps** are need to finish the fine-tuning. Because we do the data partition, the number of steps depends on the number of machines.
+####  Fine-tuning LLM between few machines:
+1. Create Task using the `train-task`. 
+    * Task type - Distributed. 
+    * Execution count set to 4.
+      * Mention that with this parameter it's easy to make experiments, distribute among as many machines as needed.
+2. Show that now we use much cheaper machine with one GPU.
+   * Mention that depending on the GPU type and amount of memory, the training can take longer, but these machines are available 90% of the time.
+3. Mention that in the script we are using `valohai.distributed` and `torch.multiprocessing`. You need to add few lines of code to set up the IPs, the port to enable distributed training.
+4. Show the execution when the training have started 
+   * Show this `3/4 members in distributed group after 2.23 seconds... All 4/4 members announced themselves ...`
+     * The members of the distributed group are connected
+   * Show the line in the logs where we map the data - we have 14732 samples.
+   * Then show the training - on this machine we have use 3683 training samples - data partition has been done.
+5. Show the estimate time for the fine-tuning (~3 hours), in the case of distributing between machines it takes longer, than within one machine.
 
+## FAQ?
+#### Q1: Which Distributed Frameworks are Supported?
 
-TO DO:
-- Add points to show same valohai features?
+Answer: Valohai supports various distributed training frameworks, providing flexibility to users based on their preferences and requirements.
+The tools that we have tested with LLMs are Torchrun and Accelerate.
+
+#### Q2: Is Data Distributed Across Workers?
+
+Answer: Yes, users have the option to distribute data across workers in Valohai. Each worker can either download its own data or work with shared data, depending on the use case.
