@@ -91,8 +91,10 @@
 
 - task:
     step: train-task
-    name: task 5 random
+    name: task-dist-test
     type: distributed
+    parameters: []
+    execution-count: 2
 
 - step:
     name: connect
