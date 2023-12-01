@@ -20,7 +20,7 @@ This demo is not suitable when:
 * The customer hasn't begun working with Language Models (LLMs) yet and is merely considering the possibility of using them. In such cases, it's recommended to focus on demonstrating the Hugging Face step.
 
 ## Video
-
+[![Watch the video](https://cdn.loom.com/sessions/thumbnails/75fbc94db88d41aa93649df47b4976ea-with-play.gif)](https://www.loom.com/share/75fbc94db88d41aa93649df47b4976ea)
 
 ## How to demo?
 
@@ -86,7 +86,7 @@ Mention that this approach can be used to distribute between GPUs on your on-pre
 
 Answer: Valohai supports various distributed training frameworks, providing flexibility to users based on their preferences and requirements.
 The tools that we have tested with LLMs are Torchrun and Accelerate.
-
+[Examples to share](https://github.com/valohai/distributed-examples) for distributed training on different frameworks.
 #### Q2: Is Data Distributed Across Workers?
 
 Answer: Yes, users have the option to distribute data across workers in Valohai. Each worker can either download its own data or work with shared data, depending on the use case.
